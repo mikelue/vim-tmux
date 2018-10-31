@@ -4,22 +4,79 @@ endif
 
 let g:autoload_tmux = 1
 
-" Use tmux send-key <a:cmd> Enter to execute a command
-function! tmux#exec(cmd)
-	call tmux#sendKeys('C-[', 'cc')
-	call tmux#sendKeys(printf("-l %s", shellescape(a:cmd)))
-	call tmux#sendKeys('Enter')
-endfunction
-function! tmux#sendKeys(...)
-	call tmux#run(printf("send-keys %s", join(a:000, ' ')))
+function! tmux#execute(context, ...)
+	call call(function("tmux#sendKeys"), [a:context] + a:000 + ["Enter"])
 endfunction
 
-function! tmux#run(content)
-	let result = system(printf("tmux %s", a:content))
+function! tmux#sendKeys(context, ...)
+	call call(function("tmux#run"), ["send-keys", a:context] + a:000)
+endfunction
+
+function! tmux#run(command, context, ...)
+	let fullCommand = ["tmux"]
+
+	" ==================================================
+	" Inserts the options of tmux
+	" ==================================================
+	let allOptions = get(a:context, "options")
+	if type(allOptions) == v:t_list && !empty(allOptions)
+		let fullCommand += allOptions
+	endif
+	" //:~)
+
+	let fullCommand += [a:command]
+
+	" ==================================================
+	" Inserts the flags of sub-command of tmux
+	" ==================================================
+	let allFlags = get(a:context, "flags")
+	if type(allFlags) == v:t_list && !empty(allFlags)
+		let fullCommand += allFlags
+	endif
+	" //:~)
+
+	let fullCommand += a:000
+
+	let result = system(join(fullCommand, " "))
 	if v:shell_error != 0
 		echoerr "TMux Error"
 		throw result
 	endif
 
-	return result
+	return trim(result)
+endfunction
+
+function! tmux#getContext(buf)
+	return {
+	\	"options": tmux#getOptions(a:buf),
+	\	"flags": tmux#getFlags(a:buf)
+	\ }
+endfunction
+function! tmux#getOptions(buf)
+	if !exists("g:tmux_options")
+		let g:tmux_options = []
+	endif
+
+	let allOptions = g:tmux_options[:]
+
+	let bufOptions = getbufvar(a:buf, "tmux_options")
+	if !empty(bufOptions)
+		let allOptions += bufOptions
+	endif
+
+	return allOptions
+endfunction
+function! tmux#getFlags(buf)
+	if !exists("g:tmux_flags")
+		let g:tmux_flags = []
+	endif
+
+	let allFlags = g:tmux_flags[:]
+
+	let bufFlags = getbufvar(a:buf, "tmux_flags")
+	if !empty(bufFlags)
+		let allFlags += bufFlags
+	endif
+
+	return allFlags
 endfunction

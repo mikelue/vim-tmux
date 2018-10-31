@@ -7,11 +7,9 @@ endif
 
 let g:plugin_tmux = 1
 
-let g:tmux_use_buffer_pane = 1
-
-command! -complete=customlist,s:listCommands -nargs=+ Tmux call tmux#run(<q-args>)
-command! -nargs=+ TmuxSendKeys call s:sendKeys(<q-args>)
-command! -complete=shellcmd -nargs=+ TmuxExec call s:exec(<q-args>)
+command! -complete=customlist,s:listCommands -nargs=+ Tmux call s:runCommand(<f-args>)
+command! -nargs=+ TmuxSendKeys call tmux#sendKeys(tmux#getContext(bufnr("%")), <f-args>)
+command! -nargs=+ TmuxExec call s:execCommand(<f-args>)
 
 let s:ALL_TMUX_COMMANDS = [
 	\ "append-selection", "attach-session",
@@ -47,20 +45,9 @@ function! s:listCommands(ArgLead, CmdLine, CursorPos)
 	return []
 endfunction
 
-function! s:sendKeys(args)
-	call tmux#sendKeys(s:processArgs(a:args))
+function! s:execCommand(...)
+	call call(function("tmux#execute"), [tmux#getContext(bufnr("%"))] + a:000)
 endfunction
-
-function! s:exec(args)
-	call tmux#exec(s:processArgs(a:args))
-endfunction
-
-function! s:processArgs(args)
-	let resultArgs = a:args
-
-	if g:tmux_use_buffer_pane == 1 && exists("b:tmux_pane")
-		let resultArgs = printf("-t %s %s", b:tmux_pane, resultArgs)
-	endif
-
-	return resultArgs
+function! s:runCommand(command, ...)
+	call call(function("tmux#run"), [a:command, tmux#getContext(bufnr("%"))] + a:000)
 endfunction
