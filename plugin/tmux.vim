@@ -1,8 +1,9 @@
-if exists("g:plugin_tmux") && !exists("g:reload_plugin_tmux")
-	finish
-endif
+if exists("g:plugin_tmux")
+	if !exists("g:reload_plugin_tmux")
+		finish
+	endif
 
-if exists('g:reload_plugin_tmux')
+	unlet s:ALL_TMUX_COMMANDS
 endif
 
 let g:plugin_tmux = 1
@@ -11,7 +12,7 @@ command! -complete=customlist,s:listCommands -nargs=+ Tmux call s:runCommand(<f-
 command! -nargs=+ TmuxSendKeys call tmux#sendKeys(tmux#getContext(bufnr("%")), <f-args>)
 command! -nargs=+ TmuxExec call s:execCommand(<f-args>)
 
-let s:ALL_TMUX_COMMANDS = [
+const s:ALL_TMUX_COMMANDS = [
 	\ "append-selection", "attach-session",
 	\ "bind-key", "break-pane",
 	\ "capture-pane", "choose-buffer", "choose-client", "choose-session", "choose-tree", "choose-window", "clear-history", "clock-mode", "command-prompt", "confirm-before", "copy-mode",
@@ -46,8 +47,10 @@ function! s:listCommands(ArgLead, CmdLine, CursorPos)
 endfunction
 
 function! s:execCommand(...)
-	call call(function("tmux#execute"), [tmux#getContext(bufnr("%"))] + a:000)
+	let ExecCmd = function("tmux#executeShellLine", [tmux#getContext(bufnr("%"))] + a:000)
+	call ExecCmd()
 endfunction
 function! s:runCommand(command, ...)
-	call call(function("tmux#run"), [a:command, tmux#getContext(bufnr("%"))] + a:000)
+	let RunCmd = function("tmux#run", [a:command, tmux#getContext(bufnr("%"))] + a:000)
+	call RunCmd()
 endfunction
