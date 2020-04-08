@@ -80,6 +80,7 @@ function! tmux#run(command, context, ...) abort
 	let fullCommand += a:000
 	let fullCommand = s:escapeArgs(fullCommand)
 
+	call s:log("Run: %s", join(fullCommand, " "))
 	return s:executeSystem(join(fullCommand, " "))
 endfunction
 
@@ -209,4 +210,12 @@ function! <SID>escapeArgs(cmd) abort
 	let cmdArgs = map(a:cmd[1:], { _, val -> val =~ '\%\([''"#$]\|\s\)' ? shellescape(val) : val })
 
 	return command + cmdArgs
+endfunction
+function! <SID>log(format, ...) abort
+	if !exists("g:tmux_debug") || g:tmux_debug == 0
+		return
+	endif
+
+	let PLog = function("printf", [a:format] + a:000)
+	echo PLog()
 endfunction
