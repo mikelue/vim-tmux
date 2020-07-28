@@ -28,6 +28,15 @@ function! tmux#sendToCopyMode(context, ...) abort
 	call SendCmd()
 endfunction
 
+function! tmux#chdirOfCurrentPane(context, path) abort
+	let checkExpr = [ printf('[ "#{pane_current_path}" != "%s" ]', a:path) ]
+	let chdirCmd = printf('"cd %s"', a:path)
+
+	let trueCmd = a:context.buildCmdWithFlags("send-keys") + [ chdirCmd, "Enter" ]
+
+	call tmux#ifShell(a:context, checkExpr, trueCmd)
+endfunction
+
 function! tmux#ifShell(context, shellCmd, trueCmd, falseCmd=[]) abort
 	let shellCmd = printf('bash -c "%s"', escape(join(a:shellCmd, " "), '"'))
 	let trueCmd = join(a:trueCmd, " ")
