@@ -216,7 +216,7 @@ function! <SID>executeSystem(cmd) abort
 endfunction
 function! <SID>escapeArgs(cmd) abort
 	let command = a:cmd[0:0]
-	let cmdArgs = map(a:cmd[1:], { _, val -> val =~ '\%\([''"#$]\|\s\)' ? shellescape(val) : val })
+	let cmdArgs = map(a:cmd[1:], { _, val -> val =~ '\%\([''"#$()]\|\s\)' ? shellescape(val) : val })
 
 	return command + cmdArgs
 endfunction
