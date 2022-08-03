@@ -39,7 +39,7 @@ endfunction
 
 function! tmux#ifShell(context, shellCmd, trueCmd, falseCmd=[]) abort
 	let shellCmd = printf('bash -c "%s"', escape(join(a:shellCmd, " "), '"'))
-	let trueCmd = join(a:trueCmd, " ")
+	let trueCmd = escape(join(a:trueCmd, " "), "{}")
 	let falseCmd = join(a:falseCmd, " ")
 
 	let ifShellArgs = [shellCmd, trueCmd]
